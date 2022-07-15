@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public class ServerIps {
 
-    public static final Map<String,Integer> weight_list = new HashMap<>(){
+    public static final Map<String,Integer> weight_list = new HashMap<String,Integer>(){
         {
             put("A", 2);
             put("B", 3);
