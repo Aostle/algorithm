@@ -1,4 +1,4 @@
-package com.hzq.threadDemo;
+package com.hzq.threadDemo.demo;
 
 /**
  * description

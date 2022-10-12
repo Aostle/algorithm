@@ -1,8 +1,7 @@
 package com.hzq.threadDemo.ymp;
 
-import java.util.Random;
-import java.util.Vector;
-import java.util.concurrent.CountDownLatch;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * description: 模拟文件解析
@@ -22,19 +21,15 @@ public class FileParser {
         return singleton;
     }
 
-    public Boolean parse(String  file) {
+    public Boolean parse(String  file) throws InterruptedException {
         Random random = new Random();
         String name = Thread.currentThread().getName();
         //随机执行时间
         System.out.println(name+":开始解析文件["+file+"]");
         int time = 5+ random.nextInt(10);
-        try {
-            Thread.sleep(time*1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        Thread.sleep(time*1000);
         //随机获取结果
-        boolean isSuccess = Math.random()>0.2;
+        boolean isSuccess = Math.random()>0.4;
         System.out.println(name+":解析文件["+file+"]完成"+",结果:"+isSuccess+",耗时:"+time+"秒");
         return isSuccess;
     }
@@ -46,9 +41,15 @@ public class FileParser {
         Vector<Boolean> list = new Vector<>(size);
         CountDownLatch counter = new CountDownLatch(size);
         for (int i = 0; i < size; i++) {
-            int finalI = i;
+
+            final int finalI = i;
             new Thread(() -> {
-                Boolean result = parse(fileNames[finalI]);
+                Boolean result = null;
+                try {
+                    result = parse(fileNames[finalI]);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
                 list.add(result);
                 counter.countDown();
             }).start();
@@ -62,5 +63,41 @@ public class FileParser {
             }
         }
         return true;
+    }
+
+
+    public Boolean getResult2() throws Exception {
+        String[] fileNames = {"基础监控文档.doc","监控工单优化.xls"};
+        int size = fileNames.length;
+        List<Future<Boolean>> futureTasks = new ArrayList<>();
+        ExecutorService pool = Executors.newFixedThreadPool(size);
+
+        for (String fileName : fileNames) {
+            Future<Boolean> task = pool.submit(() -> parse(fileName));
+            futureTasks.add(task);
+        }
+
+        pool.shutdown();
+        Set<Future<Boolean>> futureSet = new LinkedHashSet<>();
+        do {
+            for (Future<Boolean> futureTask : futureTasks) {
+                if (futureTask.isDone()) {
+                    futureSet.add(futureTask);
+                    Boolean result = futureTask.get();
+                    if (!result) {
+                        pool.shutdownNow();
+                        return false;
+                    }
+                }
+            }
+        } while (futureSet.size() != futureTasks.size());
+        return true;
+    }
+
+    private void closeTask(List<Future<Boolean>> futureTasks){
+        for (Future<Boolean> task : futureTasks) {
+            task.cancel(true);
+        }
+
     }
 }

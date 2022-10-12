@@ -9,10 +9,10 @@ import com.hzq.threadDemo.ymp.FileParser;
  */
 public class ParserTest {
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws Exception {
         FileParser  fileParser = FileParser.getSingleton();
 
-        Boolean result = fileParser.getResult();
+        Boolean result = fileParser.getResult2();
         System.out.println("zip检测结果:"+result);
     }
 }
